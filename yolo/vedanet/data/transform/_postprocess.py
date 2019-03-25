@@ -13,6 +13,7 @@ from torch.autograd import Variable
 from brambox.boxes.detections.detection import *
 from .util import BaseTransform
 
+
 __all__ = ['GetBoundingBoxes', 'NonMaxSupression', 'TensorToBrambox', 'ReverseLetterbox']
 
 
@@ -81,8 +82,9 @@ class GetBoundingBoxes(BaseTransform):
                     cls_scores = (cls_scores * conf_scores.unsqueeze(2).expand_as(cls_scores)).transpose(2,3)
                     cls_scores = cls_scores.contiguous().view(cls_scores.size(0), cls_scores.size(1), -1)
         else:
-            cls_max = network_output[:, :, 4, :]
-            cls_max_idx = torch.zeros_like(cls_max)
+            cls_scores = network_output[:, :, 4, :]
+            #cls_max = network_output[:, :, 4, :]
+            #cls_max_idx = torch.zeros_like(cls_max)
 
         score_thresh = cls_scores > conf_thresh
         score_thresh_flat = score_thresh.view(-1)
@@ -99,8 +101,11 @@ class GetBoundingBoxes(BaseTransform):
                 num_classes,coords.size(3)).contiguous().view(coords.size(0),coords.size(1),-1,coords.size(3))
         coords = coords[score_thresh[..., None].expand_as(coords)].view(-1, 4)
         scores = cls_scores[score_thresh].view(-1, 1)
-        idx = (torch.arange(num_classes)).repeat(batch, num_anchors, w*h).cuda()
-        idx = idx[score_thresh].view(-1, 1)
+        if torch.cuda.is_available():
+            idx = (torch.arange(num_classes)).repeat(batch, num_anchors, w*h).cuda()
+        else:
+            idx = (torch.arange(num_classes)).repeat(batch, num_anchors, w*h)
+        idx = idx[score_thresh].view(-1, 1).float()
         detections = torch.cat([coords, scores, idx], dim=1)
 
         # Get indexes of splits between images of batch
@@ -134,12 +139,15 @@ class NonMaxSupression(BaseTransform):
         This post-processing function expects the input to be bounding boxes,
         like the ones created by :class:`lightnet.data.GetBoundingBoxes` and outputs exactly the same format.
     """
-    def __init__(self, nms_thresh, class_nms=True, fast=False):
+    def __init__(self, nms_thresh, class_nms=False, fast=False):
         super().__init__(nms_thresh=nms_thresh, class_nms=class_nms, fast=fast)
 
     @classmethod
     def apply(cls, boxes, nms_thresh, class_nms=True, fast=False):
         return [cls._nms(box, nms_thresh, class_nms, fast) for box in boxes]
+        
+        # output = [nms(box.numpy(), nms_thresh, force_cpu=True) for box in boxes]
+        # return torch.FloatTensor(output)
 
     @staticmethod
     def _nms(boxes, nms_thresh, class_nms, fast):

@@ -56,7 +56,7 @@ def VOCTest(hyper_params):
     net = models.__dict__[model_name](hyper_params.classes, weights, train_flag=2, test_args=test_args)
     net.eval()
     log.info('Net structure\n%s' % net)
-    #import pdb
+    import pdb
     #pdb.set_trace()
     if use_cuda:
         net.cuda()

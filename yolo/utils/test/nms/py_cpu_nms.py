@@ -6,6 +6,7 @@
 # --------------------------------------------------------
 
 import numpy as np
+import torch
 
 def py_cpu_nms(dets, thresh):
     """Pure Python NMS baseline."""
@@ -16,7 +17,11 @@ def py_cpu_nms(dets, thresh):
     scores = dets[:, 4]
 
     areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-    order = scores.argsort()[::-1]
+    #order = scores.argsort()[::-1]
+
+    inv_idx = torch.arange(dets.argsort().size(0)-1, -1, -1).long()
+    # or equivalently
+    order = order[inv_idx]
 
     keep = []
     while order.size > 0:

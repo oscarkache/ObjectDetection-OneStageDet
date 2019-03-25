@@ -113,3 +113,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+yolo/weights/*
+yolo/results/*
+OneStage-Detector Notes.ipynb
+yolo/*.tar.gz
+yolo/outputs/Yolov3/
+yolo/VOCdevkitCOCO/

@@ -7,6 +7,8 @@ import logging as log
 import torch
 import torch.nn as nn
 import time
+from .. import data as vn_data
+import numpy as np
 
 __all__ = ['Lightnet']
 
@@ -66,6 +68,7 @@ class Lightnet(nn.Module):
             If you are evaluating your network and you pass a target variable, the network will return a (output, loss) tuple.
             This is usefull for testing your network, as you usually want to know the validation loss.
         """
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         if self.training:
             self.seen += x.size(0)
             t1 = time.time()
@@ -98,18 +101,28 @@ class Lightnet(nn.Module):
             for idx in range(len(outputs)):
                 assert callable(self.postprocess[idx])
                 tdets.append(self.postprocess[idx](outputs[idx]))
+            tdets = [tdet[0].to(device) for tdet in tdets if tdet[0].numel() != 0]
 
-            batch = len(tdets[0])
-            for b in range(batch):
-                single_dets = []
-                for op in range(len(outputs)):
-                    single_dets.extend(tdets[op][b])
-                dets.append(single_dets)
+            tdets = torch.cat(tdets).unsqueeze_(0) # Make 1 tensor from list of tensors at different scales
+            tdets = self.postprocess[-1](tdets) # Adding another postprocessing step
 
-            if loss is not None:
-                return dets, loss
+            if len(tdets) > 1:
+                batch = len(tdets[0])
+                for b in range(batch):
+                    single_dets = []
+                    for op in range(len(outputs)):
+                        single_dets.extend(tdets[op][b])
+                    dets.append(single_dets)
+
+                if loss is not None:
+                    return dets, loss
+                else:
+                    return dets, 0.0
             else:
-                return dets, 0.0
+                if loss is not None:
+                    return tdets, loss
+                else:
+                    return tdets, 0.0
 
     def modules_recurse(self, mod=None):
         """ This function will recursively loop over all module children.

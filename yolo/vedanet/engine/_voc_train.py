@@ -40,7 +40,7 @@ class VOCTrainingEngine(engine.Engine):
 
     def __init__(self, hyper_params):
         self.hyper_params = hyper_params
-        # all in args
+        # all in args 
         self.batch_size = hyper_params.batch
         self.mini_batch_size = hyper_params.mini_batch
         self.max_batches = hyper_params.max_batches

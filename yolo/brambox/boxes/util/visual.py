@@ -64,15 +64,18 @@ def draw_boxes(img, boxes, color=None, show_labels=False, faded=None, method=1):
     # Open image
     if isinstance(img, str) or isinstance(img, Path):
         if method == draw_boxes.METHOD_PIL:
+            print('PIL')
             original = Image.open(img)
             img = ImageDraw.Draw(original)
         else:
             img = cv2.imread(img)
     elif isinstance(img, Image.Image):
+        print('PIL')
         original = img
         img = ImageDraw.Draw(original)
         method = draw_boxes.METHOD_PIL
     elif cv2 is not None and isinstance(img, np.ndarray):
+        print('CV')
         method = draw_boxes.METHOD_CV
     else:
         raise TypeError(f'Unkown image type [{type(img)}]')
@@ -82,6 +85,7 @@ def draw_boxes(img, boxes, color=None, show_labels=False, faded=None, method=1):
     label_color = {}
     color_counter = 0
     for box in boxes:
+        print('BOX', box)
         text = None
         special = False
 

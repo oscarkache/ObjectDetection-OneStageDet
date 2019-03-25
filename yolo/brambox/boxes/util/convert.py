@@ -105,7 +105,8 @@ def parse(fmt, box_file, identify=None, offset=0, stride=1, **kwargs):
         for box_file in box_files:
             img_id = identify(box_file)
             if img_id in data:
-                raise ValueError(f'Multiple bounding box files with the same name were found ({img_id})')
+                # print(f'Multiple bounding box files with the same name were found ({img_id})')
+                continue
 
             with open(box_file, parser.read_mode) as f:
                 data[img_id] = parser.deserialize(f.read())

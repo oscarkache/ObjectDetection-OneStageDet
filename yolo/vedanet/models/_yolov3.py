@@ -7,12 +7,15 @@ from .yolo_abc import YoloABC
 from ..network import backbone
 from ..network import head
 
+import vedanet as vn
+
 __all__ = ['Yolov3']
 
 
 class Yolov3(YoloABC):
     def __init__(self, num_classes=20, weights_file=None, input_channels=3,
-                 anchors=[(10,13),  (16,30),  (33,23), (30,61), (62,45), (59,119), (116,90), (156,198), (373,326)],
+                 anchors=[(6,10), (14,24), (27,43), (32,97), (56,64), (92,108), (73,175), (141,178),  (144,291)],
+                 #anchors=[(10,13),  (16,30),  (33,23), (30,61), (62,45), (59,119), (116,90), (156,198), (373,326)],
                  anchors_mask=[(6,7,8), (3,4,5), (0,1,2)], train_flag=1, clear=False, test_args=None):
         """ Network initialisation """
         super().__init__()
@@ -22,7 +25,7 @@ class Yolov3(YoloABC):
         self.anchors = anchors
         self.anchors_mask = anchors_mask
         self.nloss = len(self.anchors_mask)
-        self.train_flag = train_flag
+        
         self.test_args = test_args
 
         self.loss = None
@@ -38,6 +41,8 @@ class Yolov3(YoloABC):
             self.load_weights(weights_file, clear)
         else:
             self.init_weights(slope=0.1)
+
+
 
     def _forward(self, x):
         middle_feats = self.backbone(x)

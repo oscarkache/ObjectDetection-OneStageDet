@@ -52,6 +52,9 @@ class Darknet(Lightnet):
         if os.path.splitext(weights_file)[1] == '.pt':
             log.debug('Saving weights to pytorch file')
             super().save_weights(weights_file, seen)
+
+            log.debug('ALSO saving weights to darknet file')
+            self._save_darknet_weights(os.path.splitext(weights_file)[0]+'.weights', seen)
         else:
             log.debug('Saving weights to darknet file')
             self._save_darknet_weights(weights_file, seen)

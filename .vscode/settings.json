@@ -1,0 +1,5 @@
+{
+    "git.ignoreLimitWarning": true,
+    "python.venvPath": "/opt/anaconda3/envs/",
+    "python.pythonPath": "/opt/anaconda3/bin/python"
+}

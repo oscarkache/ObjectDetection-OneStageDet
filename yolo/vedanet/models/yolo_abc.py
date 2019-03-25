@@ -52,7 +52,8 @@ class YoloABC(Darknet):
                     reduction = float(x.shape[2] / features[idx].shape[2]) # n, c, h, w
                     self.loss.append(loss_fn(self.num_classes, self.anchors, self.anchors_mask[idx],
                         reduction, self.seen, head_idx=idx))
-        elif self.train_flag == 2: # test
+        #elif self.train_flag == 2: # test
+        else: # test
             if self.postprocess is None:
                 self.postprocess = [] # for testing
 
@@ -64,7 +65,9 @@ class YoloABC(Darknet):
                     cur_anchors = [self.anchors[ii] for ii in self.anchors_mask[idx]]
                     cur_anchors = [(ii[0] / reduction, ii[1] / reduction) for ii in cur_anchors] # abs to relative
                     self.postprocess.append(vnd.transform.Compose([
-                        vnd.transform.GetBoundingBoxes(self.num_classes, cur_anchors, conf_thresh),
-                        vnd.transform.TensorToBrambox(network_size, labels)
-                        ]))
+                        vnd.transform.GetBoundingBoxes(self.num_classes, cur_anchors, conf_thresh)]))
+
+                self.postprocess.append(vnd.transform.Compose([
+                        vnd.transform.NonMaxSupression(self.test_args['nms_thresh'], fast=False),
+                        vnd.transform.TensorToBrambox(network_size, labels)]))
         # else, speed

@@ -8,6 +8,6 @@ from .box import Box
 from .formats import *
 from . import annotations
 from . import detections
-
-from .statistics import *
+from . import util
 from .util import *
+from .statistics import *

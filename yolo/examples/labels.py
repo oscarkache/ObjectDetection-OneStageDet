@@ -13,17 +13,14 @@ sys.path.insert(0, '.')
 import brambox.boxes as bbb
 
 DEBUG = True        # Enable some debug prints with extra information
-ROOT = '/data2/yichaoxiong/data/VOCdevkit'       # Root folder where the VOCdevkit is located
+ROOT = 'VOCdevkitCOCO'       # Root folder where the VOCdevkit is located
 
 TRAINSET = [
-    ('2012', 'train'),
-    ('2012', 'val'),
-    ('2007', 'train'),
-    ('2007', 'val'),
+    ('COCO', 'trainval'),
     ]
 
 TESTSET = [
-    ('2007', 'test'),
+    ('COCO', 'test'),
     ]
 
 def identify(xml_file):
@@ -38,6 +35,7 @@ if __name__ == '__main__':
     print('Getting training annotation filenames')
     train = []
     for (year, img_set) in TRAINSET:
+        os.makedirs(f'{ROOT}/VOC{year}/ImageSets/Main/', exist_ok=True)
         with open(f'{ROOT}/VOC{year}/ImageSets/Main/{img_set}.txt', 'r') as f:
             ids = f.read().strip().split()
         train += [f'{ROOT}/VOC{year}/Annotations/{xml_id}.xml' for xml_id in ids]
@@ -54,6 +52,7 @@ if __name__ == '__main__':
                 del annos[i]
 
     print('Generating training annotation file')
+    os.makedirs(f'{ROOT}/onedet_cache', exist_ok=True)
     bbb.generate('anno_pickle', train_annos, f'{ROOT}/onedet_cache/train.pkl')
 
     print()

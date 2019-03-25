@@ -7,6 +7,7 @@
 
 from ..nms.gpu_nms import gpu_nms
 from ..nms.cpu_nms import cpu_nms, cpu_soft_nms
+from ..nms import py_cpu_nms
 import numpy as np
 
 def soft_nms(dets, sigma=0.5, Nt=0.3, threshold=0.001, method=1):
@@ -26,4 +27,4 @@ def nms(dets, thresh, force_cpu=False, gpu_id=None):
     if gpu_id is not None and not force_cpu:
         return gpu_nms(dets, thresh, device_id=gpu_id)
     else:
-        return cpu_nms(dets, thresh)
+        return py_cpu_nms(dets, thresh)

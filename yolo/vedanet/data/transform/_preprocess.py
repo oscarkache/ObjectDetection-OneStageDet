@@ -279,7 +279,7 @@ class RandomCropLetterbox(BaseMultiTransform):
     def _tf_pil(self, img):
         """ Take random crop from image """
         self.output_w, self.output_h = self.dataset.input_dim
-        #print('output shape: %d, %d' % (self.output_w, self.output_h))
+        # print('output shape: %d, %d' % (self.output_w, self.output_h))
         orig_w, orig_h = img.size
         img_np = np.array(img)
         channels = img_np.shape[2] if len(img_np.shape) > 2 else 1

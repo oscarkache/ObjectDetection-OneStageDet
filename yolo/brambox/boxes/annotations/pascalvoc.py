@@ -35,6 +35,7 @@ class PascalVocAnnotation(Annotation):
 
     def deserialize(self, xml_obj):
         """ parse a Pascal Voc xml annotation string """
+
         self.class_label = xml_obj.find('name').text
         self.occluded = xml_obj.find('truncated').text == '1'
         self.difficult = xml_obj.find('difficult').text == '1'
@@ -42,8 +43,8 @@ class PascalVocAnnotation(Annotation):
         box = xml_obj.find('bndbox')
         self.x_top_left = float(box.find('xmin').text)
         self.y_top_left = float(box.find('ymin').text)
-        self.width = float(int(box.find('xmax').text) - self.x_top_left + 1)
-        self.height = float(int(box.find('ymax').text) - self.y_top_left + 1)
+        self.width = (float(box.find('xmax').text) - self.x_top_left + 1)
+        self.height = (float(box.find('ymax').text) - self.y_top_left + 1)
 
         self.object_id = 0
         self.lost = None
@@ -105,7 +106,7 @@ class PascalVocParser(Parser):
 
         root = ET.fromstring(string)
         for obj in root.iter('object'):
-            anno = self.box_type()
-            result += [anno.deserialize(obj)]
+          anno = self.box_type()
+          result += [anno.deserialize(obj)]
 
         return result
