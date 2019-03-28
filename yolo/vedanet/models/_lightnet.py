@@ -103,8 +103,10 @@ class Lightnet(nn.Module):
                 tdets.append(self.postprocess[idx](outputs[idx]))
             tdets = [tdet[0].to(device) for tdet in tdets if tdet[0].numel() != 0]
 
-            tdets = torch.cat(tdets).unsqueeze_(0) # Make 1 tensor from list of tensors at different scales
-            tdets = self.postprocess[-1](tdets) # Adding another postprocessing step
+            if tdets:
+                tdets = torch.cat(tdets).unsqueeze_(0) # Make 1 tensor from list of tensors at different scales
+                tdets = self.postprocess[-1](tdets) # Adding another postprocessing step
+                
 
             if len(tdets) > 1:
                 batch = len(tdets[0])

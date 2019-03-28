@@ -15,22 +15,11 @@ from brambox.boxes.util import visual as vis
 import vedanet as vn
 import logging as log
 import numpy as np
+import glob
+from cfg_parser import getConfig
 
 # log = logging.getLogger('lightnet.detect')
 
-# Parameters
-CLASSES = 13
-NETWORK_SIZE = [416, 416]
-LABELS = ["bike","bus","car","motor","person","rider","traffic light","traffic light-amber","traffic light-green","traffic light-red","traffic sign","train","truck"]
-
-
-## Pretrained ##
-# CLASSES = 20
-# NETWORK_SIZE = [544, 544]
-# LABELS= ["aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow", "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
-
-CONF_THRESH = 0.35
-NMS_THRESH = 0.45
 
 
 # Functions
@@ -47,21 +36,24 @@ def detect(net, img_path):
     """ Perform a detection """
     # Load image
     img = cv2.imread(img_path)
-    im_h,im_w = img.shape[:2]
-    img_tf = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img_tf = vn.data.transform.Letterbox.apply(img_tf, dimension=NETWORK_SIZE)
-    img_tf = tf.ToTensor()(img_tf)
-    img_tf.unsqueeze_(0)
-    img_tf = img_tf.to(device)
+    out = None
+
+    if img is not None:
+        im_h,im_w = img.shape[:2]
+        img_tf = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_tf = vn.data.transform.Letterbox.apply(img_tf, dimension=NETWORK_SIZE)
+        img_tf = tf.ToTensor()(img_tf)
+        img_tf.unsqueeze_(0)
+        img_tf = img_tf.to(device)
 
 
 
 
 
     # Run detector
-    with torch.no_grad():
-        out = net(img_tf)
-        out = vn.data.transform.ReverseLetterbox.apply(out[0], NETWORK_SIZE, (im_w, im_h)) # Resize bb to true image dimensions
+        with torch.no_grad():
+            out = net(img_tf)
+            out = vn.data.transform.ReverseLetterbox.apply(out[0], NETWORK_SIZE, (im_w, im_h)) # Resize bb to true image dimensions
     return img, out
 
 
@@ -70,6 +62,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run an image through the lightnet yolo network')
     parser.add_argument('-weight', help='Path to weight file')
     parser.add_argument('-image', help='Path to image file(s)', nargs='*')
+    parser.add_argument('-image_dir', help='Path to image dir, to be used if no image is specified', nargs='?')
+    parser.add_argument('-output_dir', help='Path to output dir, current_dir to be used if no output is specified', nargs='?')
     parser.add_argument('-c', '--cuda', action='store_true', help='Use cuda')
     parser.add_argument('-s', '--save', action='store_true', help='Save image in stead of displaying it')
     parser.add_argument('-l', '--label', action='store_true', help='Print labels and scores on the image')
@@ -83,22 +77,50 @@ if __name__ == '__main__':
             device = torch.device('cuda')
         else:
             log.error('CUDA not available')
+    
+    # Parameters
+    cfgs_root = 'cfgs'
+    cur_cfg = getConfig(cfgs_root, 'Yolov3')
+    NETWORK_SIZE = cur_cfg['detect']['input_shape']
+    LABELS = cur_cfg['labels']
+    CLASSES = len(LABELS)
+    CONF_THRESH = cur_cfg['detect']['conf_thresh']
+    NMS_THRESH = cur_cfg['detect']['nms_thresh']
 
     # Network
     network = create_network()
 
     # Detection
-    if len(args.image) > 0:
-        for img_name in args.image:
+    if args.image:
+        if len(args.image) > 0:
+            for img_name in args.image:
+                log.info(img_name)
+                image, output = detect(network, img_name)
+                if output:
+                    image = vis.draw_boxes(image, output[0], show_labels=args.label)
+                    if args.save:
+                        cv2.imwrite(f'{os.path.splitext(os.path.split(img_name)[-1])[0]}_detections.png', image)
+                    else:
+                        cv2.imshow('image', image)
+                        cv2.waitKey(0)
+                        cv2.destroyAllWindows()
+    elif len(args.image_dir) > 0:
+        images = os.listdir(args.image_dir)
+        for img_name in images:
+            img_name = os.path.join(args.image_dir, img_name)
             log.info(img_name)
             image, output = detect(network, img_name)
-            image = vis.draw_boxes(image, output[0], show_labels=args.label)
-            if args.save:
-                cv2.imwrite('detections.png', image)
-            else:
-                cv2.imshow('image', image)
-                cv2.waitKey(0)
-                cv2.destroyAllWindows()
+            if output:
+                image = vis.draw_boxes(image, output[0], show_labels=args.label)
+                if args.save:
+                    if args.output_dir:
+                        cv2.imwrite( f'{os.path.join(args.output_dir, os.path.splitext(os.path.split(img_name)[-1])[0])}_detections.png', image)
+                    else:
+                        cv2.imwrite(f'{os.path.splitext(os.path.split(img_name)[-1])[0]}_detections.png', image)
+                else:
+                    cv2.imshow('image', image)
+                    cv2.waitKey(0)
+                    cv2.destroyAllWindows()
     else:
         while True:
             try:

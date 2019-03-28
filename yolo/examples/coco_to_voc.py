@@ -49,11 +49,10 @@ def base_object(size_info, name, bbox):
 
 
 sets = {
-    "trainval": os.path.join(src_base, "instances_train2017.json"),
-    "test": os.path.join(src_base, "instances_val2017.json"),
+    "trainval": os.path.join(src_base, "instances_train2017.json")
 }
 
-cate = {x['id']: x['name'] for x in json.load(open(sets["test"]))['categories']}
+cate = {x['id']: x['name'] for x in json.load(open(sets["trainval"]))['categories']}
 
 for stage, filename in sets.items():
     print("Parse", filename)
@@ -61,7 +60,7 @@ for stage, filename in sets.items():
 
     images = {}
     for im in tqdm(data["images"], "Parse Images"):
-        img = base_dict(im['coco_url'], im['width'], im['height'], 3)
+        img = base_dict(im['file_name'], im['width'], im['height'], 3)
         images[im["id"]] = img
 
     for an in tqdm(data["annotations"], "Parse Annotations"):

@@ -24,6 +24,7 @@ class Darknet(Lightnet):
     def __init__(self):
         super().__init__()
         self.header = [0, 2, 0]
+        self.train_flag = 2
 
     def load_weights(self, weights_file, clear):
         """ This function will load the weights from a file.

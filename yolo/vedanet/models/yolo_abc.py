@@ -25,7 +25,10 @@ class YoloABC(Darknet):
         self.nloss = None
         self.loss = None
         self.postprocess = None
-        self.train_flag = None # 1 for train, 2 for test, 0 for speed
+        # if hasattr(self, 'train_flag'):
+        #     self.train_flag = self.train_flag
+        # else:
+        self.train_flag = 2 # 1 for train, 2 for test, 0 for speed
         self.test_args = None
 
         # Network
