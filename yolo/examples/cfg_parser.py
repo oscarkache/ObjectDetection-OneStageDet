@@ -17,8 +17,13 @@ def getConfig(cfgs_root, model_name):
         models = ', '.join(main_cfg['cfg_dict'].keys())
         print('There are models like %s\n' % models, file=sys.stderr)
         raise Exception
-    cfg_fp = './' + cfgs_root + '/' + main_cfg['cfg_dict'][model_name]
-    config =  parse(cfg_fp)
+
+    if not os.path.isdir(cfgs_root):
+        cfg_fp = './' + cfgs_root + '/' + main_cfg['cfg_dict'][model_name]
+        config =  parse(cfg_fp)
+    else:
+        cfg_fp = os.path.join(cfgs_root, main_cfg['cfg_dict'][model_name])
+        config =  parse(cfg_fp)
     #config['model_name'] = model_name
     #print(config)
     return config

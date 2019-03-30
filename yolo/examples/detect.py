@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 #   Copyright EAVISE
-#   Example: Perform a single image detection with the Lightnet tiny yolo network
+#   Perform image detection with Yolo network
 #
 
 import os
@@ -20,6 +20,13 @@ from cfg_parser import getConfig
 
 # log = logging.getLogger('lightnet.detect')
 
+NETWORK_SIZE = [416, 416]
+DEVICE = torch.device('cpu')
+if torch.cuda.is_available():
+    log.debug('CUDA enabled')
+    DEVICE = torch.device('cuda')
+else:
+    log.error('CUDA not available')
 
 
 # Functions
@@ -27,12 +34,12 @@ def create_network():
     """ Create the vedanet network """
     net = vn.models.Yolov3(num_classes=CLASSES, weights_file=args.weight, train_flag=2, test_args={'conf_thresh': CONF_THRESH, 'labels': LABELS, 'network_size': NETWORK_SIZE, 'nms_thresh': NMS_THRESH})
     net.eval()
-    net = net.to(device)
+    net = net.to(DEVICE)
 
     return net
 
 
-def detect(net, img_path):
+def detect(net, img_path, network_size = NETWORK_SIZE, device = DEVICE):
     """ Perform a detection """
     # Load image
     img = cv2.imread(img_path)
@@ -41,7 +48,7 @@ def detect(net, img_path):
     if img is not None:
         im_h,im_w = img.shape[:2]
         img_tf = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        img_tf = vn.data.transform.Letterbox.apply(img_tf, dimension=NETWORK_SIZE)
+        img_tf = vn.data.transform.Letterbox.apply(img_tf, dimension=network_size)
         img_tf = tf.ToTensor()(img_tf)
         img_tf.unsqueeze_(0)
         img_tf = img_tf.to(device)
@@ -53,9 +60,73 @@ def detect(net, img_path):
     # Run detector
         with torch.no_grad():
             out = net(img_tf)
-            out = vn.data.transform.ReverseLetterbox.apply(out[0], NETWORK_SIZE, (im_w, im_h)) # Resize bb to true image dimensions
+            out = vn.data.transform.ReverseLetterbox.apply(out[0], network_size, (im_w, im_h)) # Resize bb to true image dimensions
     return img, out
 
+
+class Yolov3Annotator():
+    def __init__(self, weights_file, cfgs_root = 'cfgs'):
+        self.device = torch.device('cpu')
+        if torch.cuda.is_available():
+            log.debug('CUDA enabled')
+            self.device = torch.device('cuda')
+        else:
+            log.error('CUDA not available')
+        
+        # Parameters
+        self.cur_cfg = getConfig(cfgs_root, 'Yolov3')
+        self.network_size = self.cur_cfg['detect']['input_shape']
+        self.labels = self.cur_cfg['labels']
+        self.num_classes = len(self.labels)
+        self.conf_thresh = self.cur_cfg['detect']['conf_thresh']
+        self.nms_thresh = self.cur_cfg['detect']['nms_thresh']
+        self.weights_file = weights_file
+
+        # Network
+        self.network = self.create_yolo()
+
+
+    # Functions
+    def create_yolo(self):
+        """ Create the vedanet network """
+        net = vn.models.Yolov3(num_classes=self.num_classes, weights_file=self.weights_file, train_flag=2, 
+                                test_args={'conf_thresh': self.conf_thresh, 'labels': self.labels, 
+                                'network_size': self.network_size, 'nms_thresh': self.nms_thresh})
+        net.eval()
+        net = net.to(self.device)
+
+        return net
+
+
+    def annotate(self, image_dir, cfgs_root = 'cfgs', detection_threshold = 0.25):
+        print("Initializing Annotation Pipeline ... \o/ \o/ ...")
+        tanns = []
+        if not os.path.isdir(image_dir):
+            raise ValueError('image_dir must be a directory')
+        else:
+            exts = ['*.jpg', '*.png', '*.jpeg']
+            imgs = [f for ext in exts for f in glob.glob(os.path.join(image_dir, ext))] 
+
+            for img_name in imgs:
+                anns = []
+                
+                _, output = detect(self.network, img_name, self.network_size, device = self.device)
+
+                if output:          
+                    for detection in output[0]:
+                        d = {}
+                        d['category'] = detection.class_label
+                        d['box2d'] = {'x1': detection.x_top_left,
+                                    'y1': detection.y_top_left,
+                                    'x2': detection.x_top_left-1 + detection.width,
+                                    'y2': detection.y_top_left-1 + detection.height}
+                        d['manualAttributes'] = False
+                        d['manual'] = False
+
+                        if detection.confidence >= detection_threshold:
+                            anns.append(d)
+                    tanns.append((img_name, anns))
+            return tanns
 
 # Main
 if __name__ == '__main__':
@@ -70,11 +141,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Parse Arguments
-    device = torch.device('cpu')
     if args.cuda:
         if torch.cuda.is_available():
             log.debug('CUDA enabled')
-            device = torch.device('cuda')
+            DEVICE = torch.device('cuda')
         else:
             log.error('CUDA not available')
     
