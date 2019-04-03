@@ -169,7 +169,10 @@ if __name__ == '__main__':
                 if output:
                     image = vis.draw_boxes(image, output[0], show_labels=args.label)
                     if args.save:
-                        cv2.imwrite(f'{os.path.splitext(os.path.split(img_name)[-1])[0]}_detections.png', image)
+                        if args.output_dir:
+                            cv2.imwrite( f'{os.path.join(args.output_dir, os.path.splitext(os.path.split(img_name)[-1])[0])}_detections.png', image)
+                        else:
+                            cv2.imwrite(f'{os.path.splitext(os.path.split(img_name)[-1])[0]}_detections.png', image)
                     else:
                         cv2.imshow('image', image)
                         cv2.waitKey(0)

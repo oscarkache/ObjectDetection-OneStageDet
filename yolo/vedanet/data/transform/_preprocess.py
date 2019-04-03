@@ -113,7 +113,7 @@ class Letterbox(BaseMultiTransform):
         else:
             self.scale = net_h / im_h
         if self.scale != 1:
-            img = cv2.resize(img, None, fx=self.scale, fy=self.scale, interpolation=cv2.INTER_CUBIC)
+            img = cv2.resize(img, None, fx=self.scale, fy=self.scale, interpolation=cv2.INTER_AREA)
             im_h, im_w = img.shape[:2]
 
         if im_w == net_w and im_h == net_h:

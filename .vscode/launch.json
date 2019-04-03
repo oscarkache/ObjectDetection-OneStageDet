@@ -21,7 +21,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             // BDD + Kache Set Weights
-            "args": ["-csl","-weight", "outputs/Yolov3/baseline/weights/backup.pt","-image_dir", "~/Desktop/test_imgs/", "-output_dir", "~/Desktop/test_imgs/output/"],
+            "args": ["-csl","-weight", "outputs/Yolov3/baseline/weights/backup2.pt","-image", "~/Desktop/trucks7.jpg", "-output_dir", "~/Desktop/testing_imgs/output/"],
             // BDD weights
             //"args": ["-csl","-weight", "weights/weights_30000.pt","-image_dir", "~/Desktop/test_imgs/", "-output_dir", "~/Desktop/test_imgs/output/"],
             "cwd": "/media/dean/datastore/datasets/ObjectDetection-OneStageDet/yolo/"
