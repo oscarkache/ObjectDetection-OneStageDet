@@ -15,15 +15,23 @@
         },
 
         {
-            "name": "YOLOv3: Current File (Integrated Terminal)",
+            "name": "YOLOv3: Detect",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
             // BDD + Kache Set Weights
-            "args": ["-csl","-weight", "outputs/Yolov3/baseline/weights/backup2.pt","-image", "~/Desktop/trucks7.jpg", "-output_dir", "~/Desktop/testing_imgs/output/"],
-            // BDD weights
-            //"args": ["-csl","-weight", "weights/weights_30000.pt","-image_dir", "~/Desktop/test_imgs/", "-output_dir", "~/Desktop/test_imgs/output/"],
+            "args": ["-csl","-weight", "outputs/Yolov3/baseline/weights/backup.pt","-image_dir", "~/Desktop/test_imgs/", "-output_dir", "~/Desktop/test_imgs/output3/"],
+            "cwd": "/media/dean/datastore/datasets/ObjectDetection-OneStageDet/yolo/"
+        },
+        {
+            "name": "YOLOv3: Annotate",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            // BDD + Kache Set Weights
+            "args": ["-c","-weight", "outputs/Yolov3/baseline/weights/backup.pt","-image_dir", "~/Desktop/test_imgs/", "-output_dir", "~/Desktop/test_imgs/output3/"],
             "cwd": "/media/dean/datastore/datasets/ObjectDetection-OneStageDet/yolo/"
         },
         {
